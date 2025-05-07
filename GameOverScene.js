@@ -24,4 +24,4 @@ export class GameOverScene extends Phaser.Scene {
             fontFamily: 'Arial',
         }).setOrigin(0.5);
     }
-}
+} 

@@ -154,4 +154,4 @@ export default class HelloWorldScene extends Phaser.Scene {
           this.scene.start('GameOverScene', { ganaste: false, puntos: this.score });
         }      
       }
-    }
+    } //hola
