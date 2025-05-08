@@ -20,138 +20,140 @@ export default class HelloWorldScene extends Phaser.Scene {
   }
 
   create() {
-    // Fondo
+    // ENTORNO
     this.add.image(400, 300, "Cielo").setScale(2);
 
-    // puntos
-    this.score = 0;
-    this.scoreText = this.add.text(16, 16, 'Puntos: 0', { fontSize: '24px', fill: '#fff' });
-    this.itemValues = {
-      cuadrado: 10,
-      triangulo: 20,
-      diamante: 30,
-      ninjamalo: -20
-  };
+    this.platforms = this.physics.add.staticGroup();
 
-    // Plataformas
-    const platforms = this.physics.add.staticGroup();
-    platforms.create(400, 568, 'plataforma').setScale(2).refreshBody();
-    platforms.create(700, 450, 'plataforma').setScale(0.5).refreshBody();
-    platforms.create(50, 250, 'plataforma').setScale(0.5).refreshBody();
-    platforms.create(360, 350, 'plataforma').setScale(0.5).refreshBody();
+    this.platforms.create(400, 568, 'plataforma').setScale(2).refreshBody();
 
+    this.platforms.create(700, 450, 'plataforma').setScale(0.5).refreshBody();
+    this.platforms.create(50, 250, 'plataforma').setScale(0.5).refreshBody();
+    this.platforms.create(360, 350, 'plataforma').setScale(0.5).refreshBody();
 
-    // Personaje
+    // PERSONAJE
     this.player = this.physics.add.sprite(400, 500, "ninja").setScale(0.1).setOrigin(0.5, 0.5);
     this.player.setCollideWorldBounds(true);
-    this.player.body.setGravityY(300);
+    this.physics.add.collider(this.player, this.platforms); // Colisión entre el jugador y las plataformas
+    this.cursors = this.input.keyboard.createCursorKeys(); // Entrada del teclado
 
-    // Grupo de ítems
-    this.items = this.physics.add.group();
-    this.physics.world.on('worldbounds', (body, up, down, left, right) => {
-      const item = body.gameObject;
-  
-      // Solo ítems, y solo si tocaron el borde de abajo (suelo)
-      if (this.items.contains(item) && down) {
-          let puntos = item.getData('puntosRestantes') || 0;
-          puntos -= 5;
-          item.setData('puntosRestantes', puntos);
-  
-          if (puntos <= 0) {
-              item.destroy();
-          }
-      }
-  });
-  
+    //ITEMS
+    this.items = this.physics.add.group()
 
-    // Colision
-    this.physics.add.collider(this.player, platforms);
-    this.physics.add.collider(this.items, platforms); // Colisión entre ítems y plataformas
+    this.physics.add.collider(this.items, this.platforms); // Colisión entre los items y las plataformas
 
-    // Entrada del teclado
-    this.cursors = this.input.keyboard.createCursorKeys();
+    this.physics.add.overlap(this.player, this.items, this.collectItem, null, this); // Colisión entre el jugador y los items
 
-     // Timer: cada 1 segundo, crea un ítem
-     this.time.addEvent({
-         delay: 500,
-         callback: this.spawnItem,
-         callbackScope: this,
-         loop: true
-     });
-
-     // overlap puntos y win
-
-     this.physics.add.overlap(this.player, this.items, (player, item) => {
-      const tipo = item.texture.key;
-      const puntos = this.itemValues[tipo] || 0;
-      this.score += puntos;
-      this.scoreText.setText('Puntos: ' + this.score);
-    
-      item.destroy();
-    
-      if (this.score >= 100 && !this.gameWon) {
-          this.gameWon = true;
-    
-          this.add.text(200, 250, '¡GANASTE!', {
-              fontSize: '48px',
-              fill: '#0f0',
-              fontFamily: 'Arial'
-          }).setScrollFactor(0);
-    
-          this.physics.pause();
-          this.player.setTint(0x00ff00);
-      }
+    this.time.addEvent({
+      delay: 500,
+      callback: this.spawnItem,
+      callbackScope: this,
+      loop: true,
     });
     
-  
- }
- 
- spawnItem() {
-    const itemKeys = ['cuadrado', 'triangulo', 'diamante', 'ninjamalo'];
-    const randomKey = Phaser.Utils.Array.GetRandom(itemKeys);
-    const x = Phaser.Math.Between(50, 750);
-    const item = this.items.create(x, 0, randomKey).setScale(0.5);
-    if (randomKey === 'ninjamalo') {
-        item.setScale(0.1);
+    //PUNTOS
+    this.score = 0; // Inicializa la puntuación
+    this.scoreText = this.add.text(630, 16, `Score: ${this.score}`, { //texto de puntos
+      fontSize: "32px",
+      fill: "#fff",
+      fontFamily: "Arial",
+    });
+
+    this.collectedItems = {
+      cuadrado: 0,
+      triangulo: 0,
+      diamante: 0,
+    };
+
+  }
+  update() {
+    // MOVIMIENTO DEL PERSONAJE
+    if (this.cursors.left.isDown) {
+      this.player.setVelocityX(-160);
+
+      //this.player.anims.play("left", true);
+    } else if (this.cursors.right.isDown) {
+      this.player.setVelocityX(160);
+
+      //this.player.anims.play("right", true);
+    } else {
+      this.player.setVelocityX(0);
+
+      //this.player.anims.play("turn");
     }
 
-    item.setVelocityY(Phaser.Math.Between(100, 200));
-    item.setCollideWorldBounds(true);
-    item.setBounce(0.5);
-    item.setData('puntosRestantes', this.itemValues[randomKey]);
+    if (this.cursors.up.isDown && this.player.body.touching.down) {
+      this.player.setVelocityY(-270);    }
 
-    // Activar rebote individual
-    item.setData('puedeDescontar', true);
-}
-
-    update() {
-        // Movimiento del personaje
-        if (this.cursors.left.isDown) {
-          this.player.setVelocityX(-160);
-          this.player.rotation -= 0.1;
-        } else if (this.cursors.right.isDown) {
-          this.player.setVelocityX(160);
-          this.player.rotation += 0.1;
+      this.items.children.iterate((item) => {
+        if (!item.body) return; // Si el item no tiene cuerpo, no hacer nada
+      
+        if (item.body.blocked.down) {
+          if (!item.hasJustBounced) {
+            item.valor -= 5;
+            item.hasJustBounced = true; // Marca que ya rebotó
+          }
         } else {
-          this.player.setVelocityX(0);
+          item.hasJustBounced = false; // Si no está tocando el suelo, se resetea
         }
       
-        // Salto
-        if (this.cursors.up.isDown && this.player.body.touching.down) {
-          this.player.setVelocityY(-330);
+        if (item.valor <= 0) {
+          item.disableBody(true, true); // Desactiva el item si su valor es menor o igual a 0
         }
+      });
 
-        //gameover
-        if (this.score >= 100 && !this.gameOver) {
-          this.gameOver = true;
-          this.scene.stop(); // Detiene esta escena
-          this.scene.start('GameOverScene', { ganaste: true, puntos: this.score });
-        }
+    }
+    
+      collectItem(player, item) {
+        item.disableBody(true, true);
+        this.score += item.valor || 0;
+        this.scoreText.setText(`Score: ${this.score}`);
+
+        if (this.collectedItems.hasOwnProperty(item.texture.key)) {
+          this.collectedItems[item.texture.key]++;
+        };
+        if (
+          this.score >= 100 &&
+          this.collectedItems.cuadrado >= 2 &&
+          this.collectedItems.triangulo >= 2 &&
+          this.collectedItems.diamante >= 2)
+          this.winGame()
         
-        if (this.score < 0 && !this.gameOver) {
-          this.gameOver = true;
-          this.scene.stop(); // Detiene esta escena
-          this.scene.start('GameOverScene', { ganaste: false, puntos: this.score });
-        }      
+          }
+
+      spawnItem() {
+        const itemKeys = ["cuadrado", "triangulo", "diamante", "ninjamalo"];
+        const randomKey = Phaser.Utils.Array.GetRandom(itemKeys);
+        let itemValues = {
+          cuadrado: 10,
+          triangulo: 20,
+          diamante: 30,
+          ninjamalo: -50,
+        };
+        const x = Phaser.Math.Between(50, 750);
+        const item = this.items.create(x, 0, randomKey);
+        item.setScale(0.5).setBounceY(Phaser.Math.FloatBetween(0.4, 0.8));
+        item.setVelocityY(Phaser.Math.Between(50, 100));
+        item.setCollideWorldBounds(true);
+      
+        if (randomKey === "ninjamalo") {
+          item.setScale(0.1);
+        }
+      
+        item.valor = itemValues[randomKey];
       }
-    } //hola
+
+      winGame() {
+        this.scene.start("GameOverScene", {
+        result: "win",
+        score: this.score,
+      });
+      }
+
+      loseGame() {
+        this.scene.start("GameOverScene", {
+          result: "lose",
+          score: this.score,
+        });
+      }
+  }

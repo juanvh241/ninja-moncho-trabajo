@@ -4,24 +4,24 @@ export class GameOverScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.ganaste = data.ganaste;
-        this.puntos = data.puntos;
+        this.result = data.result;
+        this.score = data.score;
     }
 
     create() {
-        const mensaje = this.ganaste ? '¡GANASTE!' : '¡PERDISTE!';
-        const color = this.ganaste ? '#0f0' : '#f00';
+        const message = this.result === 'win' ? '¡Ganaste!' : '¡Perdiste!';
+        const color = this.result === 'win' ? '#00ff00' : '#ff0000';
 
-        this.add.text(400, 200, mensaje, {
-            fontSize: '48px',
-            color: color,
+        this.add.text(400, 200, message, {
+            fontSize: '64px',
+            fill: color,
             fontFamily: 'Arial',
-        }).setOrigin(0.5);
+        }).setOrigin(0.5, 0.5);
 
-        this.add.text(400, 280, `Puntos: ${this.puntos}`, {
+        this.add.text(400, 300, `Puntaje: ${this.score}`, {
             fontSize: '32px',
-            color: '#fff',
+            fill: '#fff',
             fontFamily: 'Arial',
-        }).setOrigin(0.5);
+        }).setOrigin(0.5, 0.5);
     }
 } 
