@@ -120,10 +120,14 @@ export default class HelloWorldScene extends Phaser.Scene {
           item.hasJustBounced = false; // Si no está tocando el suelo, se resetea
         }
       
-        if (item.valor === 0) {
+        if (
+          (item.texture.key === "ninjamalo" && item.valor === -40) ||
+          (item.texture.key !== "ninjamalo" && item.valor <= 0)
+        ) {
           item.disableBody(true, true); // Desactiva el item si su valor es menor o igual a 0
-        }
-      });
+          }
+        });
+    
 
     }
     
