@@ -53,7 +53,7 @@ export default class HelloWorldScene extends Phaser.Scene {
     
     //PUNTOS
     this.score = 0; // Inicializa la puntuación
-    this.scoreText = this.add.text(630, 16, `Score: ${this.score}`, { //texto de puntos
+    this.scoreText = this.add.text(30, 16, `Score: ${this.score}`, { //texto de puntos
       fontSize: "32px",
       fill: "#fff",
       fontFamily: "Arial",
@@ -64,6 +64,29 @@ export default class HelloWorldScene extends Phaser.Scene {
       triangulo: 0,
       diamante: 0,
     };
+
+    //TIEMPO
+    this.tiempoRestante = 20; // Inicializa el tiempo restante
+    this.timerText = this.add.text(600, 16, `Tiempo: ${this.tiempoRestante}`, { //texto de tiempo
+      fontSize: "32px",
+      fill: "#fff",
+      fontFamily: "Arial",
+    });
+    this.timerEvent = this.time.addEvent({
+      delay: 1000,
+      callback: () => {
+        this.tiempoRestante--;
+        this.timerText.setText(`Tiempo: ${this.tiempoRestante}`);
+        
+        if (this.tiempoRestante <= 0) {
+          this.time.removeAllEvents(); // Detiene el temporizador
+          this.loseGame(); // Llama a la función de perder si el tiempo se agota
+        };
+      },
+      callbackScope: this,
+      loop: true,
+    });
+
 
   }
   update() {
@@ -97,7 +120,7 @@ export default class HelloWorldScene extends Phaser.Scene {
           item.hasJustBounced = false; // Si no está tocando el suelo, se resetea
         }
       
-        if (item.valor <= 0) {
+        if (item.valor === 0) {
           item.disableBody(true, true); // Desactiva el item si su valor es menor o igual a 0
         }
       });
@@ -128,7 +151,7 @@ export default class HelloWorldScene extends Phaser.Scene {
           cuadrado: 10,
           triangulo: 20,
           diamante: 30,
-          ninjamalo: -50,
+          ninjamalo: -20,
         };
         const x = Phaser.Math.Between(50, 750);
         const item = this.items.create(x, 0, randomKey);
